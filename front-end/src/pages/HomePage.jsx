@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { useAppContext } from '../context/AppContext'
-import PromptInput from '../components/PromptInput'
+import PromptInput from '../component/PromptInput'
 import { homeTags } from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRightIcon, ClockIcon, Trash2Icon } from 'lucide-react'
@@ -21,8 +21,8 @@ const HomePage = () => {
       {/* NAV */}
       <nav className='sticky top-0 z-10 flex items-center justify-between px-6 py-4'>
         <div className='flex items-center gap-2'>
-          <img src="/logo (1).svg" alt="logo" className='size-6' />
-          <span className='text-xl font-semibold tracking-tight'>Code-Builder</span>
+          <img src="/react.svg" alt="logo" className='size-6' />
+          <span className='text-xl font-semibold tracking-tight'>Code-Easily</span>
         </div>
         <div className='flex items-center gap-4 text-sm font-medium text-zinc-300'>
           <span>{user?.name}</span>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import LoginLeft from '../components/LoginLeft';
+import LoginLeft from '../component/LoginLeft';
 import { Link, useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeOffIcon, Loader2Icon } from 'lucide-react'
 import { useAppContext } from '../context/AppContext'
@@ -41,7 +41,9 @@ const AuthPage = ({mode}) => {
     <div className='min-h-screen bg-white flex text-zinc-900 font-size'>
       {/* left panel - branding */}
        <LoginLeft />
-
+       <div>
+        <img src="/hero.png" alt="hi" />
+       </div>
        {/* right panel - branding */}
       <div className='flex-1 flex flex-col justify-center items-center p-12'>
         <div className='w-full max-w-md'>

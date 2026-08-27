@@ -9,6 +9,7 @@ export const dummyUser = {
     _id: "user-1",
     name: "Alex Rivera",
     email: "alex@example.com",
+    password: "123456",
 };
 
 export const initialProjects = [
@@ -177,7 +178,7 @@ export default function Footer() {
       <div className='max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4'>
         <div className='flex items-center gap-2'>
           <span className='font-bold text-white text-lg'>SaaSify</span>
-          <span className='text-zinc-500'>— Built with BuilderAI</span>
+          <span className='text-zinc-500'>— Built with Code-Easily</span>
         </div>
         <p className='text-zinc-500'>© {new Date().getFullYear()} SaaSify Inc. All rights reserved.</p>
       </div>
