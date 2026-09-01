@@ -27,16 +27,16 @@ export function AppContextProvider({ children }) {
     const [showCode, setShowCode] = useState(false);
 
     // Auth Actions
-     const checkSession =  async () => {
-         try{
-             const { data } = await api.get("/api/auth/me");
-             setUser(data.user);
-         } catch (error) {
-             setUser(null);
-         }finally {
-             setLoadingUser(false);
-         }
-     }
+    const checkSession = async () => {
+        try {
+            const { data } = await api.get("/api/auth/me");
+            setUser(data.user);
+        } catch (error) {
+            setUser(null);
+        } finally {
+            setLoadingUser(false);
+        }
+    }
     useEffect(() => {
         checkSession()
     }, []);
@@ -84,7 +84,7 @@ export function AppContextProvider({ children }) {
     }
 
     //project actions
-    const loadProjects = async () => {
+    const loadProjects = useCallback(async () => {
         if (!user) return;
         try {
             const { data } = await api.get("/api/projects")
@@ -95,9 +95,9 @@ export function AppContextProvider({ children }) {
         } finally {
             setLoadingProjects(false);
         }
-    }
+    }, [user])
 
-    const loadProject = async (id, silent = false) => {
+    const loadProject = useCallback(async (id, silent = false) => {
         if (!user) return;
         if (!silent) setLoadingActiveProject(true)
         try {
@@ -122,7 +122,7 @@ export function AppContextProvider({ children }) {
         } finally {
             if (!silent) setLoadingActiveProject(false)
         }
-    }
+    }, [navigate, user])
 
 
     // automatically poll active projects status if generating or pending
@@ -217,9 +217,9 @@ export function AppContextProvider({ children }) {
 
     const updateProjectFiles = useCallback(
         async (params) => {
-        if(!activeProject || !user) return;
-        debouncedSave(files, activeProject._id)
-        },[activeProject, user, debouncedSave ]
+            if (!activeProject || !user) return;
+            debouncedSave(files, activeProject._id)
+        }, [activeProject, user, debouncedSave]
     )
 
     return (
