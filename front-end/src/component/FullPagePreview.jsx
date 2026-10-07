@@ -1,5 +1,5 @@
 import { SandpackLayout, SandpackPreview, SandpackProvider } from '@codesandbox/sandpack-react';
-import { detectDependencies } from '../utils/sandpackUtils';
+import { detectDependencies, toSandpackFiles } from '../utils/sandpackUtils';
 import React, { useMemo, useState } from 'react'
 import SandpackErrorMonitor from './SandpackErrorMonitor';
 
@@ -12,7 +12,7 @@ const FullPagePreview = ({ files }) => {
     const sandpackFiles = useMemo(() => {
         if (!files) return {};
         const spFiles = {};
-        for (const [path, content] of Object.entries(files)) {
+        for (const [path, content] of Object.entries(toSandpackFiles(files))) {
             spFiles[path] = { code: content }
         }
         return spFiles;

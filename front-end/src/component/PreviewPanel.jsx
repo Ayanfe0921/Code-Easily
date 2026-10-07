@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import  { SandpackProvider, useSandpack, SandpackCodeEditor, SandpackPreview, SandpackLayout } from '@codesandbox/sandpack-react';
-import { detectDependencies } from "../utils/sandpackUtils";
+import { detectDependencies, fromSandpackFiles, toSandpackFiles } from "../utils/sandpackUtils";
 import { useAppContext } from "../context/AppContext";
 import SandpackErrorMonitor from './SandpackErrorMonitor';
 
@@ -22,8 +22,8 @@ import SandpackErrorMonitor from './SandpackErrorMonitor';
     const updatedFiles = {};
     let hasChanges = false;
 
-    for (const [path, fileObj] of Object.entries(files)) {
-        const fileCode = fileObj.code;
+    const projectFiles = fromSandpackFiles(files, project.files);
+    for (const [path, fileCode] of Object.entries(projectFiles)) {
         updatedFiles[path] = fileCode;
         const originalContent = typeof project.files[path] === "string" ? project.files[path] : project.files[path]?.content;
         if(originalContent !== undefined && originalContent !== fileCode){
@@ -71,11 +71,12 @@ const PreviewPanel = ({project, activeFile, showCode}) => {
     //convert liveFiles to sandpack format
     const sandpackFiles = useMemo(()=>{
         const spFiles = {};
-        for (const [path, content] of Object.entries(liveFiles)){
+        const previewFiles = toSandpackFiles(liveFiles);
+        for (const [path, content] of Object.entries(previewFiles)){
             const fileCode = typeof content === "string" ? content : content?.content || "";
             spFiles[path] = {
                 code: fileCode,
-                active: path === activeFile,
+                active: path === `/src${activeFile}`,
             }
         }
         return spFiles
@@ -138,7 +139,7 @@ const PreviewPanel = ({project, activeFile, showCode}) => {
             wrapContent style={{ height: "100%", flex: showCode ? 1 : 2, minWidth: 0}}/>
            )}
 
-           <SandpackPreview showNavigator={false} showRefButton showOpenCodeSandbox={false} showSandpackErrorOverlay={showErrorOverlay} style={{ height: "100px", flex: showCode ? 1 : 2, minWidth: 0}}/>
+           <SandpackPreview showNavigator={false} showRefreshButton showOpenInCodeSandbox={false} showSandpackErrorOverlay={showErrorOverlay} style={{ height: "100px", flex: showCode ? 1 : 2, minWidth: 0}}/>
         </SandpackLayout>
 
 

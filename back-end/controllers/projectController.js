@@ -6,6 +6,32 @@ function hashContent(content) {
   return crypto.createHash("md5").update(content).digest("hex").slice(0, 12);
 }
 
+// Older background saves used MongoDB dotted update paths, which split names
+// like `/App.js` into nested objects. Flatten those records for previews.
+function serializeProjectFiles(files) {
+  const output = {};
+
+  function visit(value, path) {
+    if (!value || typeof value !== "object") return;
+    if (typeof value.content === "string") {
+      output[path] = value.content;
+      return;
+    }
+
+    for (const [key, child] of Object.entries(value)) {
+      const childPath = key.startsWith("/")
+        ? `${path}${key}`
+        : path
+          ? `${path}.${key}`
+          : `/${key}`;
+      visit(child, childPath);
+    }
+  }
+
+  visit(files || {}, "");
+  return output;
+}
+
 //POST /api/projects
 //create a new project from an AI prompt.
 export async function createProject(req, res) {
@@ -64,6 +90,10 @@ export async function createProject(req, res) {
 
 //Background worker to progressive generate files and update database in real-time
 export async function runBackgroundGeneration(projectId, prompt) {
+  // File generation is concurrent, but each completion must update the latest
+  // Mixed `files` object without losing another file's write.
+  let fileWriteQueue = Promise.resolve();
+
   try {
     console.log(`[Background AI] Starting generation for project ${projectId}`);
     await Project.findByIdAndUpdate(projectId, {
@@ -105,21 +135,28 @@ export async function runBackgroundGeneration(projectId, prompt) {
           `[Background AI] Finished file ${path} for project ${projectId}`,
         );
 
-        const project = await Project.findById(projectId);
+        const filePath = path.startsWith("/") ? path : `/${path}`;
+        fileWriteQueue = fileWriteQueue.catch(() => {}).then(async () => {
+          const project = await Project.findById(projectId);
+          if (!project) return;
 
-        if (project) {
           project.files = project.files || {};
-          project.files[path] = { content: code, hash: hashContent(code) };
-          project.filesGenerated = [...(project.filesGenerated || []), path];
+          project.files[filePath] = {
+            content: code,
+            hash: hashContent(code),
+          };
+          project.filesGenerated = [
+            ...new Set([...(project.filesGenerated || []), path]),
+          ];
           project.messages.push({
             role: "assistant",
             content: `Created file "${path}"`,
             timestamp: new Date(),
           });
-          project.currentFile = null;
           project.markModified("files");
           await project.save();
-        }
+        });
+        await fileWriteQueue;
       },
     });
 
@@ -193,12 +230,10 @@ export async function getProject(req, res) {
     return;
   }
 
-  const filesObj = {};
-  for (const [path, entry] of Object.entries(project.files)) {
-    filesObj[path] = entry.content;
-  }
+  const filesObj = serializeProjectFiles(project.files);
 
   res.json({
+    _id: project._id,
     id: project._id,
     name: project.name,
     description: project.description,
@@ -269,10 +304,7 @@ export async function updateProjectFiles(req, res) {
   project.files = newFiles;
   await project.save();
 
-  const filesObj = {};
-  for (const [path, entry] of Object.entries(project.files)) {
-    filesObj[path] = entry.content;
-  }
+  const filesObj = serializeProjectFiles(project.files);
 
   res.json({
     id: project._id,
@@ -322,10 +354,7 @@ export async function getPublicProject(req, res) {
     return;
   }
 
-  const filesObj = {};
-  for (const [path, entry] of Object.entries(project.files)) {
-    filesObj[path] = entry.content;
-  }
+  const filesObj = serializeProjectFiles(project.files);
 
   res.json({
     _id: project._id,

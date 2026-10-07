@@ -8,15 +8,18 @@ const SandpackErrorMonitor = ({onErrorChange}) => {
     useEffect(()=>{
         if(error){
             const msg = error.message || "";
-            const isNetworkError = 
-            msg.includes("failed to fetch") ||
-            msg.includes("col.csbops.io") ||
-            msg.includes("Err_CONNECTION_TIMED_OUT") ||
-            msg.includes("net::ERR");
+            // Keep Sandpack's error visible when its remote bundler is
+            // unreachable. Hiding this overlay leaves the template's starter
+            // screen visible, which looks like the generated app was ignored.
+            const isNetworkError =
+                msg.toLowerCase().includes("failed to fetch") ||
+                msg.toLowerCase().includes("col.csbops.io") ||
+                msg.toLowerCase().includes("err_connection_timed_out") ||
+                msg.toLowerCase().includes("net::err");
 
-            if(isNetworkError){
-                onErrorChange(false);
-                return
+            if (isNetworkError) {
+                onErrorChange(true);
+                return;
             }
         }
         onErrorChange(true)

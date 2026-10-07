@@ -102,10 +102,11 @@ export function AppContextProvider({ children }) {
         if (!silent) setLoadingActiveProject(true)
         try {
             const { data } = await api.get(`/api/projects/${id}`)
-            setActiveProject(data);
+            const project = { ...data, _id: data._id || data.id || id };
+            setActiveProject(project);
 
             //default file selection
-            const files = Object.keys(data.files);
+            const files = Object.keys(project.files);
             if (files.length > 0) {
                 setActiveFile((prev) => {
                     if (files.includes(prev)) return prev;
@@ -127,21 +128,22 @@ export function AppContextProvider({ children }) {
 
     // automatically poll active projects status if generating or pending
     useEffect(() => {
-        if (!activeProject?._id || !user) return;
+        const projectId = activeProject?._id || activeProject?.id;
+        if (!projectId || !user) return;
 
         const isOngoing = activeProject.status === "generating" || activeProject.status === "pending" || activeProject.status === "revising";
 
         if (isOngoing) {
             setChatLoading(true);
             const interval = setInterval(() => {
-                loadProject(activeProject._id, true)
+                loadProject(projectId, true)
             }, 2000);
             return () => clearInterval(interval)
         } else {
             setChatLoading(false)
         }
 
-    }, [activeProject?._id, activeProject?.status, loadProject, user])
+    }, [activeProject?._id, activeProject?.id, activeProject?.status, loadProject, user])
 
 
     const handleGenerate = useCallback(
@@ -218,7 +220,7 @@ export function AppContextProvider({ children }) {
     const updateProjectFiles = useCallback(
         async (params) => {
             if (!activeProject || !user) return;
-            debouncedSave(files, activeProject._id)
+            debouncedSave(params, activeProject._id)
         }, [activeProject, user, debouncedSave]
     )
 

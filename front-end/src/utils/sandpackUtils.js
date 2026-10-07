@@ -36,3 +36,25 @@ export function detectDependencies(files) {
     }
     return deps;
 }
+
+// Generated projects store their entry point at /App.js, while Sandpack's
+// React template mounts /src/App.js. Keep project paths stable outside preview.
+export function toSandpackFiles(files) {
+    const mapped = {};
+    for (const [path, value] of Object.entries(files || {})) {
+        const previewPath = path.startsWith("/src/") ? path : `/src${path.startsWith("/") ? path : `/${path}`}`;
+        mapped[previewPath] = value;
+    }
+    return mapped;
+}
+
+export function fromSandpackFiles(files, projectFiles = {}) {
+    const mapped = {};
+    for (const [path, value] of Object.entries(files || {})) {
+        const projectPath = path.startsWith("/src/") ? path.slice(4) : path;
+        if (Object.prototype.hasOwnProperty.call(projectFiles, projectPath)) {
+        mapped[projectPath] = typeof value === "string" ? value : value?.code ?? "";
+        }
+    }
+    return mapped;
+}
